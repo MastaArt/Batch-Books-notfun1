@@ -2,7 +2,7 @@
 [INFO] 
 
 NAME = Batch Books
-VERSION = 1.0.0
+VERSION = 1.0.1
 AUTHOR = Vasily Lukyanenko
 DEV = 3DGROUND
 CUSTOMER = Andrew Andreyuk
@@ -19,6 +19,10 @@ ICON=#("PhysX_Main", 30)
 [1.0.0]
 
 * First release =
+
+[1.0.1]
+
+- BugFix: texmap_diffuse for non geometry objects =
 
 [ABOUT]
 
@@ -401,7 +405,7 @@ rollout _BATCH_BOOKS_STEP1 "STEP 1: Create Books Collections"
 			
 				tex = getFiles (edtBooksCoverPath.text + "*.jpg")
 				
-				objs = objects as array
+				objs = geometry as array
 				v = objs.count
 				
 				list = getRandomTexList tex v
@@ -409,6 +413,8 @@ rollout _BATCH_BOOKS_STEP1 "STEP 1: Create Books Collections"
 				fileName = (getFileNameFile vars[s])
 				
 				for ii in 1 to v do (
+					mm = copy origMaterial
+					objs[ii].material = mm
 					objs[ii].material.texmap_diffuse.filename = list[ii]
 					objs[ii].material.name = fileName + "_" + (ii as string)
 				)
@@ -421,11 +427,16 @@ rollout _BATCH_BOOKS_STEP1 "STEP 1: Create Books Collections"
 		)	
 		
 		progressEnd()
-
+		
 		enableSceneRedraw()
 		enableSceneRedraw()
 		enableSceneRedraw()
+		
 		loadMaxFile origMaxFile useFileUnits: true quiet: true
+		
+		enableSceneRedraw()
+		enableSceneRedraw()
+		enableSceneRedraw()
 	)
 	
 	on _BATCH_BOOKS_STEP1 open do (
