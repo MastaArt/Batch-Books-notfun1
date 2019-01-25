@@ -2,7 +2,7 @@
 [INFO] 
 
 NAME = Batch Books
-VERSION = 1.0.1
+VERSION = 1.0.2
 AUTHOR = Vasily Lukyanenko
 DEV = 3DGROUND
 CUSTOMER = Andrew Andreyuk
@@ -23,6 +23,10 @@ ICON=#("PhysX_Main", 30)
 [1.0.1]
 
 - BugFix: texmap_diffuse for non geometry objects =
+
+[1.0.2]
+
++ Added: Support STL format =
 
 [ABOUT]
 
@@ -536,11 +540,13 @@ rollout _BATCH_BOOKS_STEP2 "STEP 2: Render & Pack"
 		
 		_OBJ = outFolder + @"\OBJ\"
 		_FBX = outFolder + @"\FBX\"
+		_STL = outFolder + @"\STL\"
 		_MAX = outFolder + @"\MAX\"
 		_3DDD = outFolder + @"\3DDD\"
 		
 		makeDir _OBJ all: true
 		makeDir _FBX all: true
+		makeDir _STL all: true
 		makeDir _MAX all: true
 		makeDir _3DDD all: true
 				
@@ -552,6 +558,7 @@ rollout _BATCH_BOOKS_STEP2 "STEP 2: Render & Pack"
 			
 			copyFile k (_OBJ + n)
 			copyFile k (_FBX + n)
+			copyFile k (_STL + n)
 			copyFile k (_MAX + n)
 			copyFile k (_3DDD + n)
 			i.filename = n
@@ -565,12 +572,15 @@ rollout _BATCH_BOOKS_STEP2 "STEP 2: Render & Pack"
 		exportFile (_OBJ + fileName + ".obj") #noPrompt 
 		if(getProgressCancel()) do return false
 		exportFile (_FBX + fileName + ".fbx") #noPrompt 
-		
+			
+		if(getProgressCancel()) do return false
+		exportFile (_STL + fileName + ".stl") #noPrompt 
+			
+		if(getProgressCancel()) do return false
+		exportFile (_3DDD + fileName + ".fbx") #noPrompt 		
 		if(getProgressCancel()) do return false
 		exportFile (_3DDD + fileName + ".obj") #noPrompt 
-		if(getProgressCancel()) do return false
-		exportFile (_3DDD + fileName + ".fbx") #noPrompt 
-		
+				
 		version = getMaxVersion()
 		version = version[1] as integer
 		
@@ -582,6 +592,7 @@ rollout _BATCH_BOOKS_STEP2 "STEP 2: Render & Pack"
 			
 		zipper.packFiles source: _OBJ target: outFolder name: "OBJ" del: true
 		zipper.packFiles source: _FBX target: outFolder name: "FBX" del: true
+		zipper.packFiles source: _STL target: outFolder name: "STL" del: true
 		zipper.packFiles source: _MAX target: outFolder name: "MAX" del: true
 		zipper.packFiles source: _3DDD target: outFolder name: "3DDD" del: true
 	)
