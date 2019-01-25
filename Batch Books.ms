@@ -2,7 +2,7 @@
 [INFO] 
 
 NAME = Batch Books
-VERSION = 1.0.2
+VERSION = 1.0.3
 AUTHOR = Vasily Lukyanenko
 DEV = 3DGROUND
 CUSTOMER = Andrew Andreyuk
@@ -27,6 +27,10 @@ ICON=#("PhysX_Main", 30)
 [1.0.2]
 
 + Added: Support STL format =
+
+[1.0.3]
+
+- BugFix: STL export only selected =
 
 [ABOUT]
 
@@ -568,12 +572,14 @@ rollout _BATCH_BOOKS_STEP2 "STEP 2: Render & Pack"
 		
 		FBXExporterSetParam "FileVersion" "FBX201200"
 		
+		try(select objects) catch()
+		
 		if(getProgressCancel()) do return false
 		exportFile (_OBJ + fileName + ".obj") #noPrompt 
 		if(getProgressCancel()) do return false
 		exportFile (_FBX + fileName + ".fbx") #noPrompt 
 			
-		if(getProgressCancel()) do return false
+		if(getProgressCancel()) do return false		
 		exportFile (_STL + fileName + ".stl") #noPrompt 
 			
 		if(getProgressCancel()) do return false
