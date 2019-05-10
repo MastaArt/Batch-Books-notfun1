@@ -2,7 +2,7 @@
 [INFO] 
 
 NAME = Batch Books
-VERSION = 1.0.3
+VERSION = 1.0.4
 AUTHOR = Vasily Lukyanenko
 DEV = 3DGROUND
 CUSTOMER = Andrew Andreyuk
@@ -31,6 +31,11 @@ ICON=#("PhysX_Main", 30)
 [1.0.3]
 
 - BugFix: STL export only selected =
+
+[1.0.4]
+
++ Added: Change texture if material has random.jpg=
++ Added: Apply material from boxes Mat_box to objects pattern (maximum 3 Mat_box)=
 
 [ABOUT]
 
@@ -290,6 +295,17 @@ rollout _BATCH_BOOKS_STEP1 "STEP 1: Create Books Collections"
 		button btnLoadBooksCover "..." width: 35 height: 25 align: #right
 	)
 	
+	group "Assing Materials To Objects" (
+		checkbox cbxMatBox1 "Mat_box1" checked: true across: 2 
+		edittext edtMatBox1 "" text: "wood"
+		
+		checkbox cbxMatBox2 "Mat_box2" checked: true across: 2 
+		edittext edtMatBox2 "" text: "metal"
+		
+		checkbox cbxMatBox3 "Mat_box3" checked: true across: 2
+		edittext edtMatBox3 "" text: "glass"
+	)
+	
 	group "Settings" (
 		spinner spnBooksCombinations "Unique combinations for each variation:" type: #integer range: [1, 999, 2] fieldwidth: 35
 	)
@@ -350,6 +366,29 @@ rollout _BATCH_BOOKS_STEP1 "STEP 1: Create Books Collections"
 		return o
 	)
 	
+	fn getChangeBitmap tgt = (
+		for b in getClassInstances BitmapTex target: tgt do (
+			if(b == undefined or b.filename == undefined or b.filename == "") do continue			
+			n = filenameFromPath (b.filename)
+			if(n == "random.jpg") do return b
+		)
+		
+		return undefined
+	)
+	
+	fn applyMaterialToObjectsPattern o pattern: "" = (
+		oo = getNodeByName o
+		if(oo == undefined) do return #notfound
+		if(oo.material == undefined) do return #nomaterial
+		if(pattern == "") do return #nopattern
+		
+		collection = for i in objects where (matchPattern i.name pattern: (pattern + "*")) collect i
+		if(collection.count == 0) do return #noobjects
+		
+		for i in collection do i.material = oo.material
+	)
+	
+	
 	on btnSelectBooksPath pressed do
 	(						
 		f = getOpenMaxFiles()			
@@ -386,13 +425,19 @@ rollout _BATCH_BOOKS_STEP1 "STEP 1: Create Books Collections"
 		if(isVray() == false) do return messageBox "V-Ray not assigned!" title: "Error!"
 		if(szBooksVars == undefined) do return messageBox "Please select at least one book variation!" title: "Error!"
 		if(edtBooksCoverPath.text == "") do return messageBox "Please choose books covers path!" title: "Error!"
+		
+		if(cbxMatBox1.checked and edtMatBox1.text == "") do return messageBox "Please specify objects for Mat_box1!" title: "Error!"
+		if(cbxMatBox2.checked and edtMatBox2.text == "") do return messageBox "Please specify objects for Mat_box2!" title: "Error!"
+		if(cbxMatBox3.checked and edtMatBox3.text == "") do return messageBox "Please specify objects for Mat_box3!" title: "Error!"
 				
 		obj = $'Book_main'
 		if(obj == undefined) do return messageBox "Book_main object with material not found!" title: "Error!"
 		if(obj.material == undefined) do return messageBox "Book_main has no material!" title: "Error!"
 		
+		
 		origMaterial = copy obj.material
 		origMaxFile = maxFilePath + maxFileName
+		changeBitmap = getChangeBitmap origMaterial
 		
 		if(origMaxFile == "") do return messageBox "Please open the scene for render!" title: "Error!"
 		
@@ -421,9 +466,18 @@ rollout _BATCH_BOOKS_STEP1 "STEP 1: Create Books Collections"
 				fileName = (getFileNameFile vars[s])
 				
 				for ii in 1 to v do (
-					mm = copy origMaterial
-					objs[ii].material = mm
-					objs[ii].material.texmap_diffuse.filename = list[ii]
+					
+					if(changeBitmap != undefined) then (
+						mm = copy origMaterial
+						bb = getChangeBitmap mm
+						bb.filename = list[ii]
+						objs[ii].material = mm
+					) else (
+						mm = copy origMaterial
+						objs[ii].material = mm
+						objs[ii].material.texmap_diffuse.filename = list[ii]						
+					)
+					
 					objs[ii].material.name = fileName + "_" + (ii as string)
 				)
 				
@@ -433,6 +487,15 @@ rollout _BATCH_BOOKS_STEP1 "STEP 1: Create Books Collections"
 			if(getProgressCancel()) do exit
 			progressUpdate (100 * s / vars.count)
 		)	
+		
+		cbxMatBox = #(cbxMatBox1, cbxMatBox2, cbxMatBox3)
+		edtMatBox = #(edtMatBox1, edtMatBox2, edtMatBox3)
+		
+		for i in 1 to 3 do (
+			if(cbxMatBox[i].checked) do (
+				applyMaterialToObjectsPattern ("Mat_box" + i as string) pattern: (edtMatBox[i].text)
+			)
+		)
 		
 		progressEnd()
 		
